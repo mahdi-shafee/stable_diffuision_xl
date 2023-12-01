@@ -1214,5 +1214,6 @@ class StableDiffusionXLPipeline(
         if not return_dict:
             return (image,)
 
-        print('return dict')
-        return StableDiffusionXLPipelineOutput(images=image)
+        images = StableDiffusionXLPipelineOutput(images=image)
+        print(type(images[0]))
+        return images
