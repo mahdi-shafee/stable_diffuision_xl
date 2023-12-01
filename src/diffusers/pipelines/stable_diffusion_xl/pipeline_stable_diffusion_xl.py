@@ -1190,6 +1190,7 @@ class StableDiffusionXLPipeline(
 
             if needs_upcasting:
                 self.upcast_vae()
+                print('needs upcasting')
                 latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
 
             image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
@@ -1204,8 +1205,7 @@ class StableDiffusionXLPipeline(
             # apply watermark if available
             if self.watermark is not None:
                 image = self.watermark.apply_watermark(image)
-
-            print('preprocess')
+                
             image = self.image_processor.postprocess(image, output_type=output_type)
 
         # Offload all models
