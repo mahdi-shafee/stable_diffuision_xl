@@ -1215,5 +1215,5 @@ class StableDiffusionXLPipeline(
             return (image,)
 
         images = StableDiffusionXLPipelineOutput(images=image)
-        images.images[0].save("final.jgp")
+        images.images[0].save("final.png")
         return images
