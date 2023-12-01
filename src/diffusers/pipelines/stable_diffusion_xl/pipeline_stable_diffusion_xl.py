@@ -1154,7 +1154,7 @@ class StableDiffusionXLPipeline(
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 print(latents.shape)
                 image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
-                print(type(image))
+                print(image.shape)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
