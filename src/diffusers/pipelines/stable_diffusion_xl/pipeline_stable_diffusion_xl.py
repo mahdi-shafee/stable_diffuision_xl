@@ -1151,16 +1151,19 @@ class StableDiffusionXLPipeline(
                     noise_pred = rescale_noise_cfg(noise_pred, noise_pred_text, guidance_rescale=self.guidance_rescale)
 
                 # compute the previous noisy sample x_t -> x_t-1
-                latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
-                self.upcast_vae()
-                latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-                image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
-                image = self.image_processor.postprocess(image, output_type=output_type)
-                image = StableDiffusionXLPipelineOutput(images=image)
-                image = image.images[0]
-                image.save(f"latent_{i}.png")
-                self.vae.to(dtype=torch.float16)
+                for num in range(2):
+                    new_latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                    self.upcast_vae()
+                    new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+                    image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
+                    image = self.image_processor.postprocess(image, output_type=output_type)
+                    image = StableDiffusionXLPipelineOutput(images=image)
+                    image = image.images[0]
+                    image.save(f"latent_{num}_step:{i}.png")
+                    self.vae.to(dtype=torch.float16)
+
+                latents = new_latents
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
