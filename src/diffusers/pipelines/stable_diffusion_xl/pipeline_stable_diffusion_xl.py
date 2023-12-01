@@ -1152,12 +1152,10 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
-                print(latents.shape)
                 image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
                 image = self.image_processor.postprocess(image, output_type=output_type)
-                print(len(image))
                 image = image[0]
-                print(type(image))
+                image.save(f"latent_{t}.png")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
