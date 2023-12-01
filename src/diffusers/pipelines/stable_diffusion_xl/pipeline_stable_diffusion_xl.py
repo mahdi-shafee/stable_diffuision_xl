@@ -1160,6 +1160,7 @@ class StableDiffusionXLPipeline(
                 image = StableDiffusionXLPipelineOutput(images=image)
                 image = image.images[0]
                 image.save(f"latent_{i}.png")
+                self.vae.to(dtype=torch.float16)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
