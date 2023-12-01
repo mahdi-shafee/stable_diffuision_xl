@@ -1154,7 +1154,7 @@ class StableDiffusionXLPipeline(
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
                 image = self.image_processor.postprocess(image, output_type=output_type)
-                image = StableDiffusionXLPipelineOutput(images=image)
+                #image = StableDiffusionXLPipelineOutput(images=image)
                 image = image[0]
                 image.save(f"latent_{i}.png")
 
@@ -1205,6 +1205,7 @@ class StableDiffusionXLPipeline(
             if self.watermark is not None:
                 image = self.watermark.apply_watermark(image)
 
+            print('preprocess')
             image = self.image_processor.postprocess(image, output_type=output_type)
 
         # Offload all models
@@ -1213,4 +1214,5 @@ class StableDiffusionXLPipeline(
         if not return_dict:
             return (image,)
 
+        print('return dict')
         return StableDiffusionXLPipelineOutput(images=image)
