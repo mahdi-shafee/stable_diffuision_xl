@@ -1215,5 +1215,5 @@ class StableDiffusionXLPipeline(
             return (image,)
 
         images = StableDiffusionXLPipelineOutput(images=image)
-        print(len(images[0]))
+        print(type(images.images[0]))
         return images
