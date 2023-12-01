@@ -1152,6 +1152,9 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+
+                self.upcast_vae()
+                latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
                 image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
                 image = self.image_processor.postprocess(image, output_type=output_type)
                 image = StableDiffusionXLPipelineOutput(images=image)
@@ -1190,7 +1193,6 @@ class StableDiffusionXLPipeline(
 
             if needs_upcasting:
                 self.upcast_vae()
-                print('needs upcasting')
                 latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
 
             image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
