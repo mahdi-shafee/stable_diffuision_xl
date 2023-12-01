@@ -1155,7 +1155,7 @@ class StableDiffusionXLPipeline(
                 image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
                 image = self.image_processor.postprocess(image, output_type=output_type)
                 image = image[0]
-                image.save(f"latent_{t}.png")
+                image.save(f"latent_{i}.png")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
