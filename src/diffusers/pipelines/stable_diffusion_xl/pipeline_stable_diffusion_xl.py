@@ -1159,8 +1159,10 @@ class StableDiffusionXLPipeline(
                 image = self.image_processor.postprocess(image, output_type=output_type)
                 image = StableDiffusionXLPipelineOutput(images=image)
                 image = image.images[0]
-                image.save(f"latent_{num}_step:{i}.png")
+                image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
+
+                print(t)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
