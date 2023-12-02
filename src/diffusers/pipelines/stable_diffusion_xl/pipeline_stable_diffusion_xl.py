@@ -1130,7 +1130,6 @@ class StableDiffusionXLPipeline(
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-                new_latent_model_input = self.new_scheduler.scale_model_input(latent_model_input, t)
 
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
@@ -1148,7 +1147,7 @@ class StableDiffusionXLPipeline(
                 )[0]
 
                 new_noise_pred = self.unet(
-                    new_latent_model_input,
+                    latent_model_input,
                     t,
                     encoder_hidden_states=prompt_embeds,
                     timestep_cond=timestep_cond,
