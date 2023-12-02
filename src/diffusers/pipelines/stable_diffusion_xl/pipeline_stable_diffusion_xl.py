@@ -783,8 +783,6 @@ class StableDiffusionXLPipeline(
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        personalization_prompt,
-        idefics_processor,
         prompt: Union[str, List[str]] = None,
         prompt_2: Optional[Union[str, List[str]]] = None,
         height: Optional[int] = None,
@@ -1195,20 +1193,6 @@ class StableDiffusionXLPipeline(
                 image = image.images[0]
                 image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
-
-                if i % 4 == 0:
-                    new_idefics_prompt = personalization_prompt[::]
-                    old_idefics_prompt = personalization_prompt[::]
-                    
-                    new_idefics_prompt.append(new_image)
-                    new_idefics_prompt.append("\nUser: Score for this image?")
-                    new_idefics_prompt.append("<end_of_utterance>")
-                    new_idefics_prompt.append("\nAssistant: ")
-
-                    old_idefics_prompt.append(image)
-                    old_idefics_prompt.append("\nUser: Score for this image?")
-                    old_idefics_prompt.append("<end_of_utterance>")
-                    old_idefics_prompt.append("\nAssistant: ")
 
 
                 if callback_on_step_end is not None:
