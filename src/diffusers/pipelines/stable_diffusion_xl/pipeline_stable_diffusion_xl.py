@@ -784,8 +784,6 @@ class StableDiffusionXLPipeline(
     def __call__(
         self,
         prompt: Union[str, List[str]] = None,
-        personalization_prompt,
-        idefics_processor,
         prompt_2: Optional[Union[str, List[str]]] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -817,6 +815,8 @@ class StableDiffusionXLPipeline(
         clip_skip: Optional[int] = None,
         callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        personalization_prompt,
+        idefics_processor,
         **kwargs,
     ):
         r"""
