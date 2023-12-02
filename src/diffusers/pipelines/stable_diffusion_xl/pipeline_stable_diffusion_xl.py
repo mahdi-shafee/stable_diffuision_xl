@@ -1137,7 +1137,7 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
                     
-                new_prompt_embeds = prompt_embeds + 2 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
+                new_prompt_embeds = prompt_embeds + 2 * torch.randn(1).item() * torch.ones(2, 77, 2048, dtype=torch.float16).to('cuda')
 
                 print(prompt_embeds)
 
