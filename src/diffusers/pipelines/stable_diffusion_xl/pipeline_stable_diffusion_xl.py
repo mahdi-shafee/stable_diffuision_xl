@@ -1196,6 +1196,20 @@ class StableDiffusionXLPipeline(
                 image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
 
+                if i % 3 == 0:
+                    negative_prompt = personalization_prompt[::]
+                    positive_prompt = personalization_prompt[::]
+
+                    negative_prompt.append(image)
+                    negative_prompt.append("\nUser: Score for this image?")
+                    negative_prompt.append("<end_of_utterance>")
+                    negative_prompt.append("\nAssistant: ")
+
+                    positive_prompt.append(new_image)
+                    positive_prompt.append("\nUser: Score for this image?")
+                    positive_prompt.append("<end_of_utterance>")
+                    positive_prompt.append("\nAssistant: ")
+
 
                 if callback_on_step_end is not None:
                     print('callback enabled')
