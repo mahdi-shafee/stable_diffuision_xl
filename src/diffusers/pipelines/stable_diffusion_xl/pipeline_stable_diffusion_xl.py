@@ -783,6 +783,7 @@ class StableDiffusionXLPipeline(
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
+        reward_model,
         personalization_prompt,
         idefics_processor,
         idefics_image_transform,
@@ -1215,7 +1216,16 @@ class StableDiffusionXLPipeline(
                     positive_inputs = idefics_processor(positive_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
                     negative_inputs = idefics_processor(negative_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
 
-                    if True:
+                    negative_outputs = reward_model(**negative_inputs, interpolate_pos_encoding=True)
+                    positive_outputs = reward_model(**positive_inputs, interpolate_pos_encoding=True)
+
+                    negative_logits = negative_outputs.get("logits")
+                    positive_logits = positive_outputs.get("logits")
+
+                    negative_score = (negative_logits[:, -1][:, 718].item() - negative_logits[:, -1][:, 448].item()) / abs(negative_logits[:, -1][:, 718].item() + negative_logits[:, -1][:, 448].item())
+                    positive_score = (positive_logits[:, -1][:, 718].item() - positive_logits[:, -1][:, 448].item()) / abs(positive_logits[:, -1][:, 718].item() + positive_logits[:, -1][:, 448].item())
+
+                    if positive_score > negative_score:
                         latents = new_latents
 
 
