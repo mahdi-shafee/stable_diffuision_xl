@@ -1137,7 +1137,7 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
 
-                new_prompt_embeds = prompt_embeds
+                new_prompt_embeds = prompt_embeds + 0.0001 * torch.randn(2, 77, 2048)
 
                 print(new_prompt_embeds.shape)
 
