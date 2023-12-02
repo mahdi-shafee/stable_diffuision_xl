@@ -784,6 +784,8 @@ class StableDiffusionXLPipeline(
     def __call__(
         self,
         prompt: Union[str, List[str]] = None,
+        personalization_prompt,
+        idefics_processor,
         prompt_2: Optional[Union[str, List[str]]] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -952,6 +954,7 @@ class StableDiffusionXLPipeline(
             [`~pipelines.stable_diffusion_xl.StableDiffusionXLPipelineOutput`] if `return_dict` is True, otherwise a
             `tuple`. When returning a tuple, the first element is a list with the generated images.
         """
+
 
         callback = kwargs.pop("callback", None)
         callback_steps = kwargs.pop("callback_steps", None)
@@ -1176,11 +1179,11 @@ class StableDiffusionXLPipeline(
                 new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
                 new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-                image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
-                image = self.image_processor.postprocess(image, output_type=output_type)
-                image = StableDiffusionXLPipelineOutput(images=image)
-                image = image.images[0]
-                image.save(f"latent_new_{i}.png")
+                new_image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
+                new_image = self.image_processor.postprocess(new_image, output_type=output_type)
+                new_image = StableDiffusionXLPipelineOutput(images=new_image)
+                new_image = new_image.images[0]
+                new_image.save(f"latent_new_{i}.png")
                 self.vae.to(dtype=torch.float16)
 
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
@@ -1192,6 +1195,21 @@ class StableDiffusionXLPipeline(
                 image = image.images[0]
                 image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
+
+                if i % 4 == 0:
+                    new_idefics_prompt = personalization_prompt[::]
+                    old_idefics_prompt = personalization_prompt[::]
+                    
+                    new_idefics_prompt.append(new_image)
+                    new_idefics_prompt.append("\nUser: Score for this image?")
+                    new_idefics_prompt.append("<end_of_utterance>")
+                    new_idefics_prompt.append("\nAssistant: ")
+
+                    old_idefics_prompt.append(image)
+                    old_idefics_prompt.append("\nUser: Score for this image?")
+                    old_idefics_prompt.append("<end_of_utterance>")
+                    old_idefics_prompt.append("\nAssistant: ")
+
 
                 if callback_on_step_end is not None:
                     print('callback enabled')
