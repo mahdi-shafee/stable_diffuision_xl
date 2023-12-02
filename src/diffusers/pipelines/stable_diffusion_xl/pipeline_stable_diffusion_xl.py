@@ -785,6 +785,7 @@ class StableDiffusionXLPipeline(
         self,
         personalization_prompt,
         idefics_processor,
+        idefics_image_transform,
         prompt: Union[str, List[str]] = None,
         prompt_2: Optional[Union[str, List[str]]] = None,
         height: Optional[int] = None,
@@ -1209,6 +1210,9 @@ class StableDiffusionXLPipeline(
                     positive_prompt.append("\nUser: Score for this image?")
                     positive_prompt.append("<end_of_utterance>")
                     positive_prompt.append("\nAssistant: ")
+
+                    positive_inputs = idefics_processor(positive_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
+                    negative_inputs = idefics_processor(negative_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
 
 
                 if callback_on_step_end is not None:
