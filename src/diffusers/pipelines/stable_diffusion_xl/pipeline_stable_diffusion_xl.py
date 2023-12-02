@@ -1140,7 +1140,7 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
                     
-                new_prompt_embeds = prompt_embeds + 4 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
+                new_prompt_embeds = prompt_embeds + 0 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
                 
                 new_noise_pred = self.unet(
                     new_latent_model_input,
