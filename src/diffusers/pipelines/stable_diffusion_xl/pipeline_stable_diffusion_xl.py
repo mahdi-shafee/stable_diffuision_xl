@@ -1198,7 +1198,7 @@ class StableDiffusionXLPipeline(
                 image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
 
-                if i % 3 == 0:
+                if i % 3 and i > 5 == 0:
                     negative_prompt = personalization_prompt[::]
                     positive_prompt = personalization_prompt[::]
 
