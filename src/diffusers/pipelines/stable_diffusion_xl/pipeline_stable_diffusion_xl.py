@@ -1135,6 +1135,16 @@ class StableDiffusionXLPipeline(
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
+
+                new_noise_pred = self.unet(
+                    latent_model_input,
+                    t,
+                    encoder_hidden_states=prompt_embeds,
+                    timestep_cond=timestep_cond,
+                    cross_attention_kwargs=self.cross_attention_kwargs,
+                    added_cond_kwargs=added_cond_kwargs,
+                    return_dict=False,
+                )[0]
                     
                 noise_pred = self.unet(
                     latent_model_input,
@@ -1157,7 +1167,7 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
 
-                new_latents = self.new_scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
                 new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
                 image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
