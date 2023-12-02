@@ -1149,7 +1149,7 @@ class StableDiffusionXLPipeline(
                     return_dict=False,
                 )[0]
 
-                if i < 4:
+                if i < 5 or i % 5 != 0:
                     noise_pred = self.unet(
                         latent_model_input,
                         t,
