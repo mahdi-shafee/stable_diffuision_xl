@@ -1137,7 +1137,7 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
                     
-                new_prompt_embeds = prompt_embeds + 1 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
+                new_prompt_embeds = prompt_embeds + 4 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
 
                 new_noise_pred = self.unet(
                     new_latent_model_input,
@@ -1148,16 +1148,28 @@ class StableDiffusionXLPipeline(
                     added_cond_kwargs=added_cond_kwargs,
                     return_dict=False,
                 )[0]
-                    
-                noise_pred = self.unet(
-                    latent_model_input,
-                    t,
-                    encoder_hidden_states=new_prompt_embeds,
-                    timestep_cond=timestep_cond,
-                    cross_attention_kwargs=self.cross_attention_kwargs,
-                    added_cond_kwargs=added_cond_kwargs,
-                    return_dict=False,
-                )[0]
+
+                if i < 4:
+                    noise_pred = self.unet(
+                        latent_model_input,
+                        t,
+                        encoder_hidden_states=prompt_embeds,
+                        timestep_cond=timestep_cond,
+                        cross_attention_kwargs=self.cross_attention_kwargs,
+                        added_cond_kwargs=added_cond_kwargs,
+                        return_dict=False,
+                    )[0]
+
+                else:
+                    noise_pred = self.unet(
+                        latent_model_input,
+                        t,
+                        encoder_hidden_states=new_prompt_embeds,
+                        timestep_cond=timestep_cond,
+                        cross_attention_kwargs=self.cross_attention_kwargs,
+                        added_cond_kwargs=added_cond_kwargs,
+                        return_dict=False,
+                    )[0]
 
                 # perform guidance
                 if self.do_classifier_free_guidance:
