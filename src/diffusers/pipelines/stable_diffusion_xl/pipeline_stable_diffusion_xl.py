@@ -1130,13 +1130,25 @@ class StableDiffusionXLPipeline(
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+                new_latent_model_input = self.new_scheduler.scale_model_input(latent_model_input, t)
 
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
+                    
                 noise_pred = self.unet(
                     latent_model_input,
+                    t,
+                    encoder_hidden_states=prompt_embeds,
+                    timestep_cond=timestep_cond,
+                    cross_attention_kwargs=self.cross_attention_kwargs,
+                    added_cond_kwargs=added_cond_kwargs,
+                    return_dict=False,
+                )[0]
+
+                new_noise_pred = self.unet(
+                    new_latent_model_input,
                     t,
                     encoder_hidden_states=prompt_embeds,
                     timestep_cond=timestep_cond,
@@ -1156,16 +1168,6 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
 
-                new_latents = self.new_scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
-                self.upcast_vae()
-                new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-                image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
-                image = self.image_processor.postprocess(image, output_type=output_type)
-                image = StableDiffusionXLPipelineOutput(images=image)
-                image = image.images[0]
-                image.save(f"latent_new_{i}.png")
-                self.vae.to(dtype=torch.float16)
-
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
                 latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
@@ -1174,6 +1176,16 @@ class StableDiffusionXLPipeline(
                 image = StableDiffusionXLPipelineOutput(images=image)
                 image = image.images[0]
                 image.save(f"latent_{i}.png")
+                self.vae.to(dtype=torch.float16)
+
+                new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                self.upcast_vae()
+                new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+                image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
+                image = self.image_processor.postprocess(image, output_type=output_type)
+                image = StableDiffusionXLPipelineOutput(images=image)
+                image = image.images[0]
+                image.save(f"latent_new_{i}.png")
                 self.vae.to(dtype=torch.float16)
 
                 print(t)
