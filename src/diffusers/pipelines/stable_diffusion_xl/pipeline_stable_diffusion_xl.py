@@ -1129,7 +1129,9 @@ class StableDiffusionXLPipeline(
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
-                new_latent_model_input = self.new_scheduler.scale_model_input(latent_model_input, t)
+                if i > 5 and i % 3 == 0:
+                    new_latent_model_input = self.new_scheduler.scale_model_input(latent_model_input, t)
+
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
                 # predict the noise residual
@@ -1137,32 +1139,12 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
                     
-                new_prompt_embeds = prompt_embeds + 4 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
+                if i > 5 and i % 3 == 0:
+                    new_prompt_embeds = prompt_embeds + 0 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
 
-                new_noise_pred = self.unet(
-                    new_latent_model_input,
-                    t,
-                    encoder_hidden_states=new_prompt_embeds,
-                    timestep_cond=timestep_cond,
-                    cross_attention_kwargs=self.cross_attention_kwargs,
-                    added_cond_kwargs=added_cond_kwargs,
-                    return_dict=False,
-                )[0]
-
-                if i < 5 or i % 3 != 0:
-                    noise_pred = self.unet(
-                        latent_model_input,
-                        t,
-                        encoder_hidden_states=prompt_embeds,
-                        timestep_cond=timestep_cond,
-                        cross_attention_kwargs=self.cross_attention_kwargs,
-                        added_cond_kwargs=added_cond_kwargs,
-                        return_dict=False,
-                    )[0]
-
-                else:
-                    noise_pred = self.unet(
-                        latent_model_input,
+                if i > 5 and i % 3 == 0:
+                    new_noise_pred = self.unet(
+                        new_latent_model_input,
                         t,
                         encoder_hidden_states=new_prompt_embeds,
                         timestep_cond=timestep_cond,
@@ -1171,13 +1153,24 @@ class StableDiffusionXLPipeline(
                         return_dict=False,
                     )[0]
 
+                noise_pred = self.unet(
+                    latent_model_input,
+                    t,
+                    encoder_hidden_states=prompt_embeds,
+                    timestep_cond=timestep_cond,
+                    cross_attention_kwargs=self.cross_attention_kwargs,
+                    added_cond_kwargs=added_cond_kwargs,
+                    return_dict=False,
+                )[0]
+
                 # perform guidance
                 if self.do_classifier_free_guidance:
                     new_noise_pred_uncond, new_noise_pred_text = new_noise_pred.chunk(2)
                     new_noise_pred = new_noise_pred_uncond + self.guidance_scale * (new_noise_pred_text - new_noise_pred_uncond)
                     
-                    noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-                    noise_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
+                    if i > 5 and i % 3 == 0:
+                        noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+                        noise_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
 
                 if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
                     # Based on 3.4. in https://arxiv.org/pdf/2305.08891.pdf
@@ -1185,15 +1178,16 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
 
-                new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
-                self.upcast_vae()
-                new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-                image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
-                image = self.image_processor.postprocess(image, output_type=output_type)
-                image = StableDiffusionXLPipelineOutput(images=image)
-                image = image.images[0]
-                image.save(f"latent_new_{i}.png")
-                self.vae.to(dtype=torch.float16)
+                if i > 5 and i % 3 == 0:
+                    new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                    self.upcast_vae()
+                    new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+                    image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
+                    image = self.image_processor.postprocess(image, output_type=output_type)
+                    image = StableDiffusionXLPipelineOutput(images=image)
+                    image = image.images[0]
+                    image.save(f"latent_new_{i}.png")
+                    self.vae.to(dtype=torch.float16)
 
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
