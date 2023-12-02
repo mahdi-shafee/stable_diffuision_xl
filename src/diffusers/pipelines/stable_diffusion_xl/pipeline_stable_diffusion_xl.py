@@ -1165,6 +1165,7 @@ class StableDiffusionXLPipeline(
                 print(t)
 
                 if callback_on_step_end is not None:
+                    print('callback enabled')
                     callback_kwargs = {}
                     for k in callback_on_step_end_tensor_inputs:
                         callback_kwargs[k] = locals()[k]
