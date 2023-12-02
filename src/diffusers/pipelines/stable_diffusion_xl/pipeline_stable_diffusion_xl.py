@@ -1179,7 +1179,7 @@ class StableDiffusionXLPipeline(
                 # compute the previous noisy sample x_t -> x_t-1
 
                 if i > 5 and i % 3 == 0:
-                    new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                    new_latents = self.new_scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                     self.upcast_vae()
                     new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
                     image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
