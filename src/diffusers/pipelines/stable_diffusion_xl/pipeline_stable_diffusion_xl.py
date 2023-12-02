@@ -1139,7 +1139,7 @@ class StableDiffusionXLPipeline(
                     
                 new_prompt_embeds = prompt_embeds + 1 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
 
-                print(new_prompt_embeds.shape)
+                print(new_prompt_embeds)
 
                 new_noise_pred = self.unet(
                     new_latent_model_input,
