@@ -1138,7 +1138,7 @@ class StableDiffusionXLPipeline(
                     added_cond_kwargs["image_embeds"] = image_embeds
 
                 new_noise_pred = self.unet(
-                    latent_model_input,
+                    new_latent_model_input,
                     t,
                     encoder_hidden_states=prompt_embeds,
                     timestep_cond=timestep_cond,
