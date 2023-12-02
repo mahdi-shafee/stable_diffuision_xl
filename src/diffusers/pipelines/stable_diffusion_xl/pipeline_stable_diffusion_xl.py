@@ -1146,16 +1146,6 @@ class StableDiffusionXLPipeline(
                     return_dict=False,
                 )[0]
 
-                new_noise_pred = self.unet(
-                    latent_model_input,
-                    t,
-                    encoder_hidden_states=prompt_embeds,
-                    timestep_cond=timestep_cond,
-                    cross_attention_kwargs=self.cross_attention_kwargs,
-                    added_cond_kwargs=added_cond_kwargs,
-                    return_dict=False,
-                )[0]
-
                 # perform guidance
                 if self.do_classifier_free_guidance:
                     noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
@@ -1177,7 +1167,7 @@ class StableDiffusionXLPipeline(
                 image.save(f"latent_{i}.png")
                 self.vae.to(dtype=torch.float16)
 
-                new_latents = self.new_scheduler.step(new_noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                new_latents = self.new_scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
                 new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
                 image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
