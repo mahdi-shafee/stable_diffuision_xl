@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import inspect
+import copy
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -1120,6 +1121,9 @@ class StableDiffusionXLPipeline(
             ).to(device=device, dtype=latents.dtype)
 
         self._num_timesteps = len(timesteps)
+        
+        self.new_scheduler = copy.deepcopy(self.scheduler)
+        
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
@@ -1151,6 +1155,16 @@ class StableDiffusionXLPipeline(
                     noise_pred = rescale_noise_cfg(noise_pred, noise_pred_text, guidance_rescale=self.guidance_rescale)
 
                 # compute the previous noisy sample x_t -> x_t-1
+
+                new_latents = self.new_scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                self.upcast_vae()
+                new_latents = new_latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+                image = self.vae.decode(new_latents / self.vae.config.scaling_factor, return_dict=False)[0]
+                image = self.image_processor.postprocess(image, output_type=output_type)
+                image = StableDiffusionXLPipelineOutput(images=image)
+                image = image.images[0]
+                image.save(f"latent_new_{i}.png")
+                self.vae.to(dtype=torch.float16)
 
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 self.upcast_vae()
