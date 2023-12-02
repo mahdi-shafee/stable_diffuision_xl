@@ -791,6 +791,7 @@ class StableDiffusionXLPipeline(
         height: Optional[int] = None,
         width: Optional[int] = None,
         num_inference_steps: int = 50,
+        prompt_embed_noise:float = 0.0,
         timesteps: List[int] = None,
         denoising_end: Optional[float] = None,
         guidance_scale: float = 5.0,
@@ -1141,7 +1142,7 @@ class StableDiffusionXLPipeline(
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
                     
-                new_prompt_embeds = prompt_embeds + 0 * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
+                new_prompt_embeds = prompt_embeds + prompt_embed_noise * torch.randn(2, 77, 2048, dtype=torch.float16).to('cuda')
                 
                 new_noise_pred = self.unet(
                     new_latent_model_input,
@@ -1213,6 +1214,9 @@ class StableDiffusionXLPipeline(
 
                     positive_inputs = idefics_processor(positive_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
                     negative_inputs = idefics_processor(negative_prompt, transform=idefics_image_transform, return_tensors="pt").to(device)
+
+                    if True:
+                        latents = new_latents
 
 
                 if callback_on_step_end is not None:
